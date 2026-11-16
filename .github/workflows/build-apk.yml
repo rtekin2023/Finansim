@@ -33,31 +33,19 @@ jobs:
           unzip -q /tmp/gradle.zip -d /tmp
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Extract Android project
-        run: unzip -o Finansim_v1_1_Gelir_Bildirim_Ikon.zip -d .
-
-      - name: Align Java and Kotlin versions
+      - name: Extract Finansim project
         run: |
-          cat >> app/build.gradle.kts <<'EOF'
-
-          android {
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-          }
-          EOF
+          unzip -q -o Finansim_Duzeltilmis_TestOncesi.zip -d project
 
       - name: Build APK
-        run: gradle :app:assembleDebug
+        run: |
+          cd project/Finansim
+          gradle :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Finansim-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: project/Finansim/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           
