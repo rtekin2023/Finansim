@@ -4,6 +4,9 @@ name: Build Finansim APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,19 +36,36 @@ jobs:
           unzip -q /tmp/gradle.zip -d /tmp
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Extract Finansim project
+      - name: Extract latest Finansim project
         run: |
-          unzip -q -o Finansim_Duzeltilmis_TestOncesi.zip -d project
+          test -f Finansim_Turkuaz_Premium_v1_2.zip
+          mkdir -p project
+          unzip -q -o Finansim_Turkuaz_Premium_v1_2.zip -d project
+
+      - name: Locate Android project
+        id: locate
+        run: |
+          SETTINGS=$(find project -name settings.gradle.kts -print -quit)
+          if [ -z "$SETTINGS" ]; then
+            SETTINGS=$(find project -name settings.gradle -print -quit)
+          fi
+          if [ -z "$SETTINGS" ]; then
+            echo "Android project settings file not found"
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$SETTINGS")
+          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
+          echo "Project found: $PROJECT_DIR"
 
       - name: Build APK
         run: |
-          cd project/Finansim
+          cd "${{ steps.locate.outputs.project_dir }}"
           gradle :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Finansim-APK
-          path: project/Finansim/app/build/outputs/apk/debug/app-debug.apk
+          name: Finansim-Turkuaz-Premium-APK
+          path: ${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           
