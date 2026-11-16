@@ -38,9 +38,9 @@ jobs:
 
       - name: Extract latest Finansim project
         run: |
-          test -f Finansim_Turkuaz_Premium_v1_2.zip
+          test -f Finansim_Turkuaz_Premium_v1_2_Duzeltme1.zip
           mkdir -p project
-          unzip -q -o Finansim_Turkuaz_Premium_v1_2.zip -d project
+          unzip -q -o Finansim_Turkuaz_Premium_v1_2_Duzeltme1.zip -d project
 
       - name: Locate Android project
         id: locate
