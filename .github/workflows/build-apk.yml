@@ -34,7 +34,7 @@ jobs:
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Extract Android project
-        run: unzip -o Finansim_GitHub_Actions_Dosyalari.zip -d .
+        run: unzip -o Finansim_v1_1_Gelir_Bildirim_Ikon.zip -d .
 
       - name: Align Java and Kotlin versions
         run: |
