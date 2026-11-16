@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,72 +24,41 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: platform-tools
 
       - name: Install Android SDK packages
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install Gradle
         run: |
-          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /tmp
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o gradle.zip
+          unzip -q gradle.zip -d /tmp
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Extract Finansim 2.0 source
+      - name: Extract source
         run: |
-          ZIP="Finansim_2_0_Gelistirme_Kaynak_Yeniden.zip"
+          mkdir project
+          unzip -q Finansim_2_0_Gelistirme_Kaynak_Yeniden.zip -d project
 
-          if [ ! -f "$ZIP" ]; then
-            echo "ERROR: Source ZIP not found: $ZIP"
-            exit 1
-          fi
-
-          mkdir -p project
-          unzip -q -o "$ZIP" -d project
-
-      - name: Locate Android project
+      - name: Find Android project
         id: locate
         run: |
-          SETTINGS=$(find project -name settings.gradle.kts -print -quit)
+          SETTINGS=$(find project -name settings.gradle.kts -o -name settings.gradle | head -1)
+          test -n "$SETTINGS"
+          echo "dir=$(dirname "$SETTINGS")" >> "$GITHUB_OUTPUT"
 
-          if [ -z "$SETTINGS" ]; then
-            SETTINGS=$(find project -name settings.gradle -print -quit)
-          fi
-
-          if [ -z "$SETTINGS" ]; then
-            echo "ERROR: Android settings.gradle file not found"
-            find project -maxdepth 4 -type f | head -100
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$SETTINGS")
-          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
-
-          echo "Android project found: $PROJECT_DIR"
-
-      - name: Build Debug APK
+      - name: Build APK
         run: |
-          cd "${{ steps.locate.outputs.project_dir }}"
+          cd "${{ steps.locate.outputs.dir }}"
           gradle :app:assembleDebug
 
       - name: Verify APK
         run: |
-          APK="${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/app-debug.apk"
+          test -f "${{ steps.locate.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk"
 
-          if [ ! -f "$APK" ]; then
-            echo "ERROR: APK was not generated"
-            exit 1
-          fi
-
-          ls -lh "$APK"
-
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Finansim-2.0-APK
-          path: ${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/*.apk
+          path: ${{ steps.locate.outputs.dir }}/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 14
           
