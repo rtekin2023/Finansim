@@ -34,8 +34,22 @@ jobs:
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Extract Android project
+        run: unzip -o Finansim_GitHub_Actions_Dosyalari.zip -d .
+
+      - name: Align Java and Kotlin versions
         run: |
-          unzip -o Finansim_GitHub_Actions_Dosyalari.zip -d .
+          cat >> app/build.gradle.kts <<'EOF'
+
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
 
       - name: Build APK
         run: gradle :app:assembleDebug
