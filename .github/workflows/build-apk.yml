@@ -35,8 +35,7 @@ jobs:
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Check source ZIP
-        run: |
-          test -f Finansim_2_0_Premium_Kod_Kontrol.zip
+        run: test -f Finansim_2_0_Premium_Kod_Kontrol.zip
 
       - name: Extract source
         run: |
@@ -46,9 +45,16 @@ jobs:
       - name: Find Android project
         id: locate
         run: |
-          SETTINGS=$(find project -name settings.gradle.kts -o -name settings.gradle | head -1)
+          SETTINGS=$(find project \( -name settings.gradle.kts -o -name settings.gradle \) | head -1)
           test -n "$SETTINGS"
           echo "dir=$(dirname "$SETTINGS")" >> "$GITHUB_OUTPUT"
+
+      - name: Fix missing RoundedCornerShape import
+        run: |
+          FILE="${{ steps.locate.outputs.dir }}/app/src/main/java/com/finansim/app/AdvancedFinance.kt"
+          test -f "$FILE"
+          grep -q 'import androidx.compose.foundation.shape.RoundedCornerShape' "$FILE" || sed -i '/import androidx.compose.foundation.layout.\*/a import androidx.compose.foundation.shape.RoundedCornerShape' "$FILE"
+          grep -q 'import androidx.compose.foundation.shape.RoundedCornerShape' "$FILE"
 
       - name: Build APK
         run: |
